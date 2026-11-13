@@ -1,13 +1,31 @@
 # Local-First Agent Architecture
 
+[English](README.en.md) | 中文
+
 > 把执行权收回本地，把“完成”变成可验证事实。
-> 这是一份架构设计笔记，不是可运行实现。
+> 这是一份架构设计笔记，附一个最小可运行 demo。
 
 *Note: The structure design, data redaction, and this very GitHub deployment were executed by a local AI agent. The human provided only the intent and captcha.*
 
-**Status:** architecture notes / design rationale  
+**Status:** architecture notes + minimal runnable evidence-gate demo  
 **Scope:** routing, evidence gate, trace, watchdog, local-first execution  
-**Not included:** core executor, local RPA implementation, credentials, private logs
+**Not included:** production executor, local RPA implementation, credentials, private logs
+
+## Quick Start
+
+```bash
+git clone https://github.com/qqdess/Local-First-Agent-Architecture.git
+cd Local-First-Agent-Architecture
+python demo/run_demo.py
+```
+
+Expected: the first claim is blocked with `[BLOCK] No evidence, task failed`;
+the second, backed by an actual file and a matching hash, passes.
+
+![actual stdout from python demo/run_demo.py](docs/demo_output.png)
+
+No model, network, API key, RPA, or host path is required. The demo is a
+small, standard-library mock agent plus a filesystem evidence gate.
 
 ---
 
@@ -19,15 +37,29 @@
 
 ## 这个仓库不是什么
 
-- 不是可直接运行的 Agent 框架；
-- 不包含核心执行器、本地 RPA 脚本、任何密钥或宿主路径；
+- 不是完整的 Agent 框架；`demo/` 只演示证据门，不是生产执行器；
+- 不包含生产执行器、本地 RPA 脚本、任何密钥或宿主路径；
 - 不代表生产级最佳实践，作者自己标注为“原型阶段”。
 
 ## 目录
 
+- [`demo/`](demo/)：最小可运行证据门（标准库，无网络、无密钥）
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)：架构图、组件边界、失败模式
 - [`evidence/`](evidence/)：脱敏后的调度日志片段与 trace 证据
 - [`docs/PUBLISH.md`](docs/PUBLISH.md)：本地仓库推送到 GitHub 的命令
+
+## Demo 说明
+
+```bash
+python demo/run_demo.py
+```
+
+- `demo/mock_agent.py`：模拟 Agent 说“任务执行完毕，文件已成功修改”；
+- `demo/evidence_gate.py`：去磁盘上验 `target.txt` 是否存在、非空、哈希是否对得上；
+- `demo/run_demo.py`：先跑“只说不做”的假成功，再跑“真写文件”的真成功。
+
+假成功会得到 `[BLOCK] No evidence, task failed`；真成功才会 `[PASS]`。
+这个 demo 只证明证据门的判定逻辑，不包含云端调用、RPA 或生产执行器。
 
 ---
 
